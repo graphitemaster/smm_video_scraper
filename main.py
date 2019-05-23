@@ -30,8 +30,6 @@ if __name__ == '__main__':
     if ocr is not None:
       ocr.terminate()
     print('Terminated')
-  except:
-    print('Unknown error')
 
   if ocr is not None:
     print(ocr.results)

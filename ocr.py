@@ -32,6 +32,11 @@ class OCR:
   @staticmethod
   def process(frame):
     try:
-      return (frame, ''.join([x for x in image_to_string(Image.open(frame), lang='warpbar').upper() if x in '0123456789ABCDEF']))
+      text = image_to_string(Image.open(frame), lang='warpbar')
+      if text:
+        normalized = ''.join([x for x in text.upper() if x in '0123456789ABCDEF'])
+        if len(normalized) == 4*3:
+          return (frame, normalized)
+      return (frame, None)
     except KeyboardInterrupt:
       pass

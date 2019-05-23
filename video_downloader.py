@@ -19,7 +19,7 @@ class VideoDownloader:
     self.title = self.video.title
     self.filename = filename
 
-    self.progress_bar = tqdm(total=self.stream.filesize, desc='Downloading {}'.format(self.title).ljust(60), bar_format='{l_bar}{bar}|[{elapsed}<{remaining}]')
+    self.progress_bar = tqdm(total=self.stream.filesize, desc='Downloading'.ljust(60), bar_format='{l_bar}{bar}|[{elapsed}<{remaining}]')
   
   def start(self):
     self.stream.download(filename=self.filename)

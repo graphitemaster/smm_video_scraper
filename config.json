@@ -1,6 +1,6 @@
 {
-  "split_processes": 4,
-  "ocr_processes": 8,
+  "split_processes": 8,
+  "ocr_processes": 16,
   "warp_bar": {
     "position": {
       "x": 1006,
