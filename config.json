@@ -1,0 +1,21 @@
+{
+  "split_processes": 4,
+  "ocr_processes": 8,
+  "warp_bar": {
+    "position": {
+      "x": 1006,
+      "y": 4
+    },
+    "size": {
+      "w": 271,
+      "h": 15
+    },
+    "section": {
+      "size": {
+        "w": 56,
+        "h": 15
+      },
+      "skip": 14
+    }
+  }
+}
