@@ -3,6 +3,13 @@ Given a YT URL of SMM game play can extract level codes and the timestamp in the
 
 This project was created to catalogue the levels that were played by the streamer [CarlSagan42](https://www.twitch.tv/carlsagan42) but it can work with any video from any streamer.
 
+As an example, the following was automatically detected by this tool with some additional code to search the SMM bookmark website.
+```
+Level detected: 0580-0000-03E0-A554 at 00:09:21 ["Uno Más: The Wiring Malfunction." by "Sus Door"] https://youtu.be/sBUvj2eCdb8?t=561
+Level detected: 3EB7-0000-03B9-A97D at 00:23:02 ["Uno Màs: NSMB turns into SMW" by "Robraf21"] https://youtu.be/sBUvj2eCdb8?t=1382
+Level detected: 26A8-0000-03E2-6319 at 00:32:18 ["Charizard's Dungeon of Fire" by "crashbashr"] https://youtu.be/sBUvj2eCdb8?t=1938
+```
+
 ## Configuration
 To use this tool you must first provide a `config.json` file containing a rough approximation of where in a **720p video** the level code region of the warp bar is, this is easily done by taking a frame of the video and finding the rectangle of the warp bar level code by hand. Here's an example configuration for CarlSagan42's videos in particular.
 
