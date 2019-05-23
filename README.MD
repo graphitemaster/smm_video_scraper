@@ -3,7 +3,7 @@ Given a YT URL of SMM game play can extract level codes and the timestamp in the
 
 This project was created to catalogue the levels that were played by the streamer [CarlSagan42](https://www.twitch.tv/carlsagan42) but it can work with any video from any streamer.
 
-As an example, the following was automatically detected by this tool for [this video](https://youtu.be/sBUvj2eCdb8) with some additional code to search the SMM bookmark website
+As an example, the following was automatically detected by this tool for [this video](https://youtu.be/sBUvj2eCdb8) with some additional code to search the SMM bookmark website for level info.
 ```
 0580-0000-03E0-A554 00:09:21 "Uno Más: The Wiring Malfunction." by "Sus Door" 
 3EB7-0000-03B9-A97D 00:23:02 "Uno Màs: NSMB turns into SMW" by "Robraf21"
