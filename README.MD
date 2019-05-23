@@ -1,5 +1,5 @@
 # SMM WB video scraper
-The following is a tool that given a YT URL of SMM game play with the warp bar can extract level codes and the timestamp in the URL of where that level was played as provide information about the level name and and it's creator.
+Given a YT URL of SMM game play can extract level codes and the timestamp in the URL of where that level was played as well as provide information about the level such as title and author.
 
 This project was created to catalogue the levels that were played by the streamer [CarlSagan42](https://www.twitch.tv/carlsagan42) but it can work with any video from any streamer.
 
