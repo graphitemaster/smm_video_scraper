@@ -13,42 +13,41 @@ class VideoDownloader:
 
   __slots__ = ('_video', '_buffer', '_lock', '_progress', '_thread')
 
-  def __init__(self: VideoDownloader, video: VideoInfo):
+  def __init__(self, video: VideoInfo):
     self._video = video
 
     if self._video._stream:
       # Imbue the stream with on progress callback so we can monitor the download
-      self._video._stream.on_progress = self.on_progress
+      self._video._stream.on_progress = self._on_progress
 
     # Run the download off the main thread to not block ourselfs
     self._buffer = VideoDownloader.Data()
     self._lock = Lock()
     self._progress = 0
-    self._thread = Thread(target=self.worker, args=(video.stream, self._buffer,))
+    self._thread = Thread(target=self._worker, args=(video.stream, self._buffer,))
 
-  def start(self: VideoDownloader) -> None:
+  def start(self):
     self._thread.start()
 
-  def join(self: VideoDownloader) -> None:
+  def join(self):
     self._thread.join()
 
-  @property
-  def buffer(self: VideoDownloader) -> Optional[BytesIO]:
+  def buffer(self) -> Optional[BytesIO]:
     self.join()
     return self._buffer._bytes
 
   @property
-  def progress(self: VideoDownloader) -> float:
+  def progress(self) -> float:
     with self._lock:
       return self._progress
 
   @staticmethod
-  def worker(stream, result: VideoDownloader.Data) -> None:
+  def _worker(stream, result: VideoDownloader.Data):
     result._bytes = stream.stream_to_buffer()
     if result._bytes:
       result._bytes.seek(0, 0)
 
-  def on_progress(self, chunk, stream, bytes_remaining) -> None:
+  def _on_progress(self, chunk, stream, bytes_remaining):
     progress = abs(bytes_remaining - self._video.filesize) / self._video.filesize
     with self._lock:
       self._progress = round(progress * 100.0, 2)

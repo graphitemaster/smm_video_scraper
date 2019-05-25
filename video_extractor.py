@@ -35,7 +35,7 @@ class VideoClip:
 class VideoExtractor:
   __slots__ = ('_workers', '_clips')
 
-  def __init__(self: VideoExtractor, filename: str, workers: int, strategies: List[Strategy]):
+  def __init__(self, filename: str, workers: int, strategies: List[Strategy]):
     self._workers = workers
 
     stream = cv2.VideoCapture(filename)
@@ -53,8 +53,8 @@ class VideoExtractor:
     frame_count += int(frames % workers)
     self._clips.append(VideoClip(filename, frame_offset, frame_count, strategies))
 
-  def process(self: VideoExtractor) -> List[List[Result]]:
-    pool = Pool(self._workers, initializer=self.worker_initializer)
+  def process(self) -> List[List[Result]]:
+    pool = Pool(self._workers, initializer=self._worker_initializer)
     return pool.map_async(self.worker, self._clips).get()
 
   @staticmethod
@@ -83,9 +83,10 @@ class VideoExtractor:
     stream.release()
 
     return frames
-  
+
+  # Ignore SIGINT inside worker processes so they don't get KeyboardInterrupt
   @staticmethod
-  def worker_initializer() -> None:
+  def _worker_initializer() -> None:
     signal(SIGINT, SIG_IGN)
 
 # Extraction techniques

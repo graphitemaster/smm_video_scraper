@@ -34,7 +34,7 @@ class VideoPlaylist:
     
     if self._filter:
       while True:
-        if not len(self._urls):
+        if not self._urls:
           raise StopIteration
 
         url = self._urls.pop()

@@ -14,16 +14,16 @@ environ['TESSDATA_PREFIX'] = './tess'
 class Recognizer:
   __slots__ = ('_results', '_workers')
 
-  def __init__(self: Recognizer, results: List[Result], workers: int) -> None:
+  def __init__(self, results: List[Result], workers: int):
     self._results = results
     self._workers = workers
   
-  def process(self: Recognizer) -> List[Tuple[Result, Optional[str]]]:
-    pool = Pool(self._workers, initializer=self.worker_initializer)
-    return pool.map_async(self.worker, self._results).get()
+  def process(self) -> List[Tuple[Result, Optional[str]]]:
+    pool = Pool(self._workers, initializer=self._worker_initializer)
+    return pool.map_async(self._worker, self._results).get()
 
   @staticmethod
-  def worker(result: Result) -> Tuple[Result, Optional[str]]:
+  def _worker(result: Result) -> Optional[Tuple[Result, str]]:
     image = Image.fromarray(result.frame, mode='L')
 
     text: Optional[str] = None
@@ -54,8 +54,9 @@ class Recognizer:
       if len(text) == 16 and text[4:8] == '0000':
         return (result, text)
 
-    return (result, None)
+    return None
 
+  # Ignore SIGINT inside worker processes so they don't get KeyboardInterrupt
   @staticmethod
-  def worker_initializer() -> None:
+  def _worker_initializer() -> None:
     signal(SIGINT, SIG_IGN)
