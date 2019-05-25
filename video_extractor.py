@@ -64,9 +64,6 @@ class VideoExtractor:
     stream = cv2.VideoCapture(video_clip.filename)
     stream.set(cv2.CAP_PROP_POS_FRAMES, video_clip.frame_offset)
 
-    w = stream.get(cv2.CAP_PROP_FRAME_WIDTH)
-    h = stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
-
     for i in range(video_clip.frame_count):
       grabbed, frame = stream.read()
       if not grabbed:
@@ -107,7 +104,7 @@ def transition(frame: ndarray) -> Optional[ndarray]:
   # Search for the title box in the transition screen
   title = cv2.threshold(frame.copy(), 200, 255, cv2.THRESH_BINARY)[1]
 
-  # Crop ouyt the course box
+  # Crop out the course box
   crop = Rectangle(int(0.150*w), int(0.075*h), int(0.700*w), int(0.130*h))
   title = title[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
 
@@ -142,7 +139,7 @@ def warpbar(frame: ndarray) -> Optional[ndarray]:
   frame = cv2.threshold(frame, 220, 255, cv2.THRESH_BINARY)[1]
 
   # Crop to area of interest
-  crop = Rectangle(1280-275, 0, 275, 23)
+  crop = Rectangle(int(0.785*w), 0, int(0.214*w), int(0.032*h))
   frame = frame[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
 
   # Only when there's at least 10% non-black in the result
