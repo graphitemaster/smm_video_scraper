@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from pytube import extract
 
 from video_downloader import VideoDownloader
-from video_extractor import VideoExtractor, WarpbarStrategy, TransitionStrategy
+from video_extractor import VideoExtractor
 from video_playlist import VideoPlaylist
 from video_info import VideoInfo
 from recognizer import Recognizer
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     for video in videos:
       print(f'Processing {video}')
-      extractor = VideoExtractor(video, 8, [WarpbarStrategy, TransitionStrategy])
+      extractor = VideoExtractor(video, 8, ['transition'])
       flattened = [value for results in extractor.process() for value in results]
       recognizer = Recognizer(flattened, 8)
       results = recognizer.process()

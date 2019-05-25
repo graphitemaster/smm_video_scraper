@@ -32,11 +32,78 @@ class VideoClip:
   frame_count: int
   strategies: List[Strategy]
 
+# Extraction techniques
+def _transition(frame: ndarray) -> Optional[ndarray]:
+  w = frame.shape[1]
+  h = frame.shape[0]
+
+  pixels = int(w*h)
+
+  # The frame should be at least 70% black, otherwise it couldn't possibly be
+  # a level transition screen
+  zero = pixels - cv2.countNonZero(frame)
+  if zero < pixels*0.70:
+    return None
+
+  # Search for the title box in the transition screen
+  title = cv2.threshold(frame.copy(), 200, 255, cv2.THRESH_BINARY)[1]
+
+  # Crop out the course box
+  crop = Rectangle(int(0.150*w), int(0.075*h), int(0.700*w), int(0.130*h))
+  title = title[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
+
+  # The result of the crop should be 80% non-black otherwise this is not
+  # a course box
+  if cv2.countNonZero(title) < crop.w*crop.h*0.80:
+    return None
+
+  # Crop out the area that contains the course code
+  crop = Rectangle(int(0.412*w), int(0.340*h), int(0.200*w), int(0.035*h))
+  frame = frame[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
+
+  # Only when there's at least 10% non-black in the result
+  if cv2.countNonZero(frame) < crop.w*crop.h*0.10:
+    return None
+
+  return frame
+
+def _warpbar(frame: ndarray) -> Optional[ndarray]:
+  w = frame.shape[1]
+  h = frame.shape[0]
+
+  pixels = int(w*h)
+
+  # The frame should be at least 70% black, otherwise it couldn't possibly be
+  # a level transition screen
+  zero = pixels - cv2.countNonZero(frame)
+  if zero < pixels*0.70:
+    return None
+
+  # Isolate bright areas
+  frame = cv2.threshold(frame, 220, 255, cv2.THRESH_BINARY)[1]
+
+  # Crop to area of interest
+  crop = Rectangle(int(0.785*w), 0, int(0.214*w), int(0.032*h))
+  frame = frame[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
+
+  # Only when there's at least 10% non-black in the result
+  if cv2.countNonZero(frame) < crop.w*crop.h*0.10:
+    return None
+
+  return frame
+
 class VideoExtractor:
   __slots__ = ('_workers', '_clips')
 
-  def __init__(self, filename: str, workers: int, strategies: List[Strategy]):
+  def __init__(self, filename: str, workers: int, use_strategies: List[str]):
     self._workers = workers
+
+    strategies: List[Strategy] = []
+    for strategy in use_strategies:
+      if strategy == 'warpbar':
+        strategies.append(Strategy(strategy, _warpbar))
+      elif strategy == 'transition':
+        strategies.append(Strategy(strategy, _transition))
 
     stream = cv2.VideoCapture(filename)
     frames = int(stream.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -88,66 +155,3 @@ class VideoExtractor:
   @staticmethod
   def _worker_initializer() -> None:
     signal(SIGINT, SIG_IGN)
-
-# Extraction techniques
-def transition(frame: ndarray) -> Optional[ndarray]:
-  w = frame.shape[1]
-  h = frame.shape[0]
-
-  pixels = int(w*h)
-
-  # The frame should be at least 70% black, otherwise it couldn't possibly be
-  # a level transition screen
-  zero = pixels - cv2.countNonZero(frame)
-  if zero < pixels*0.70:
-    return None
-
-  # Search for the title box in the transition screen
-  title = cv2.threshold(frame.copy(), 200, 255, cv2.THRESH_BINARY)[1]
-
-  # Crop out the course box
-  crop = Rectangle(int(0.150*w), int(0.075*h), int(0.700*w), int(0.130*h))
-  title = title[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
-
-  # The result of the crop should be 80% non-black otherwise this is not
-  # a course box
-  if cv2.countNonZero(title) < crop.w*crop.h*0.80:
-    return None
-
-  # Crop out the area that contains the course code
-  crop = Rectangle(int(0.412*w), int(0.340*h), int(0.200*w), int(0.035*h))
-  frame = frame[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
-
-  # Only when there's at least 10% non-black in the result
-  if cv2.countNonZero(frame) < crop.w*crop.h*0.10:
-    return None
-
-  return frame
-
-def warpbar(frame: ndarray) -> Optional[ndarray]:
-  w = frame.shape[1]
-  h = frame.shape[0]
-
-  pixels = int(w*h)
-
-  # The frame should be at least 70% black, otherwise it couldn't possibly be
-  # a level transition screen
-  zero = pixels - cv2.countNonZero(frame)
-  if zero < pixels*0.70:
-    return None
-
-  # Isolate bright areas
-  frame = cv2.threshold(frame, 220, 255, cv2.THRESH_BINARY)[1]
-
-  # Crop to area of interest
-  crop = Rectangle(int(0.785*w), 0, int(0.214*w), int(0.032*h))
-  frame = frame[crop.y:crop.y+crop.h, crop.x:crop.x+crop.w]
-
-  # Only when there's at least 10% non-black in the result
-  if cv2.countNonZero(frame) < crop.w*crop.h*0.10:
-    return None
-
-  return frame
-
-WarpbarStrategy = Strategy('warpbar', warpbar)
-TransitionStrategy = Strategy('transition', transition)

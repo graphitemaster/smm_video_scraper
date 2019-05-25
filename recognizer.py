@@ -41,11 +41,13 @@ class Recognizer:
       #
       # Here we perform a very simple homoglyph substitution for things we can be
       # confident in.
-      text = text.replace('I', '1')
-      text = text.replace('O', '0')
-      text = text.replace('Q', '0')
-      text = text.replace('S', '5')
-      text = text.replace('Z', '2')
+      text = text.translate(str.maketrans({
+        'I': '1',
+        'O': '0',
+        'Q': '0',
+        'S': '5',
+        'Z': '2'
+      }))
 
       text = ''.join([x for x in text.upper() if x in '0123456789ABCDEF'])
 
