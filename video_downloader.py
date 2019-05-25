@@ -1,31 +1,55 @@
-# Utility to download a video from YT
-#
-# NOTE: Always downloads 720p @ 30fps, video_extractor.py assumes 720p for the
-# WB region and anything smaller makes Tesseract OCR less effective while anything
-# larger results in diminishing returns in terms of performance.
-#
-# NOTE: The choice of 30fps makes the time stamps less accurate but it's half the
-# work to process 30fps than it is 60fps. If you want more accurate captures you
-# can change that here. The only valid values are 30 and 60.
-FPS=30
+from __future__ import annotations
+from typing import Optional
+from threading import Thread, Lock
+from io import BytesIO
 
-from pytube import YouTube
-from tqdm import tqdm
+from video_info import VideoInfo
 
 class VideoDownloader:
-  def __init__(self, url, filename):
-    self.video = YouTube(url, on_progress_callback=self.progress)
-    self.stream = self.video.streams.filter(subtype='mp4', fps=FPS, res='720p').first()
-    self.title = self.video.title
-    self.filename = filename
+  class Data:
+    __slots__ = ('_bytes')
+    def __init__(self: VideoDownloader.Data, data: BytesIO = None):
+      self._bytes = data
 
-    self.progress_bar = tqdm(total=self.stream.filesize, desc='Downloading'.ljust(60), bar_format='{l_bar}{bar}|[{elapsed}<{remaining}]')
-  
-  def start(self):
-    self.stream.download(filename=self.filename)
-    self.progress_bar.close()
+  __slots__ = ('_video', '_buffer', '_lock', '_progress', '_thread')
 
-  def progress(self, stream, chunk, file_handle, bytes_remaining):
-    size = self.stream.filesize
-    current = abs(bytes_remaining - size)
-    self.progress_bar.update(abs(self.progress_bar.n - current))
+  def __init__(self: VideoDownloader, video: VideoInfo):
+    self._video = video
+
+    if self._video._stream:
+      # Imbue the stream with on progress callback so we can monitor the download
+      self._video._stream.on_progress = self.on_progress
+
+    # Run the download off the main thread to not block ourselfs
+    self._buffer = VideoDownloader.Data()
+    self._lock = Lock()
+    self._progress = 0
+    self._thread = Thread(target=self.worker, args=(video.stream, self._buffer,))
+
+  def start(self: VideoDownloader) -> None:
+    self._thread.start()
+
+  def join(self: VideoDownloader) -> None:
+    self._thread.join()
+
+  @property
+  def buffer(self: VideoDownloader) -> Optional[BytesIO]:
+    self.join()
+    return self._buffer._bytes
+
+  @property
+  def progress(self: VideoDownloader) -> float:
+    with self._lock:
+      return self._progress
+
+  @staticmethod
+  def worker(stream, result: VideoDownloader.Data) -> None:
+    result._bytes = stream.stream_to_buffer()
+    if result._bytes:
+      result._bytes.seek(0, 0)
+
+  def on_progress(self, chunk, stream, bytes_remaining) -> None:
+    progress = abs(bytes_remaining - self._video.filesize) / self._video.filesize
+    with self._lock:
+      self._progress = round(progress * 100.0, 2)
+    stream.write(chunk)
